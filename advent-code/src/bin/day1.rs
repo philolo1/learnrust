@@ -10,7 +10,7 @@ fn main() -> Result<()> {
 
     println!("Arr: {:?}", arr);
 
-    let num_arr: Vec<i32> = arr.iter().map(|user| {
+    let mut num_arr: Vec<i32> = arr.iter().map(|user| {
         let lines: Vec<i32> = user.lines().flat_map(str::parse::<i32>).collect();
         let mut sum = 0;
         for num in lines {
@@ -20,8 +20,19 @@ fn main() -> Result<()> {
     }).collect();
 
     println!("NumArr: {:?}", num_arr);
-    let max: &i32 = num_arr.iter().max().context("Something")?;
-    println!("Max: {:?}", max);
+
+    num_arr.sort();
+
+
+    let max_arr = vec![
+        num_arr.pop().unwrap(),
+        num_arr.pop().unwrap(),
+        num_arr.pop().unwrap(),
+    ];
+
+
+    let sum:i32 = max_arr.iter().sum();
+    println!("Max: {:?}", sum);
 
     return Ok(());
 }
