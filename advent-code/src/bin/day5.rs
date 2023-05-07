@@ -64,6 +64,19 @@ impl Input {
             self.items[to].push(el);
         }
     }
+
+    fn move_item2(&mut self, num: usize, from: usize, to: usize) {
+        let mut v: Vec<char> = vec![];
+        for _ in 0..num {
+            let el = self.items[from].pop().unwrap();
+            v.push(el)
+        }
+
+        for _ in 0..num {
+            self.items[to].push(v.pop().unwrap());
+        }
+
+    }
     fn print_last_item(&mut self) {
         let mut st = String::from("");
         for v in self.items.iter() {
@@ -96,7 +109,7 @@ fn main() -> Result<()> {
             .flat_map(str::parse::<usize>)
             .collect();
         println!("Arr: {:?}", res);
-        input.move_item(res[0], res[1] - 1, res[2] - 1);
+        input.move_item2(res[0], res[1] - 1, res[2] - 1);
         println!("El: {:?}", input);
     }
 
