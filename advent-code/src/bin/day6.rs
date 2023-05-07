@@ -3,9 +3,25 @@ use anyhow::{anyhow, Error, Result, Context};
 use std::env;
 use std::collections::HashMap;
 
-#[derive(Debug)]
-struct Input {
-    items: Vec<Vec<char>>,
+
+fn calc_solution(content: String, num: usize) -> usize {
+    for i in 0..content.len() {
+        let mut map = HashMap::new();
+        let mut has_found = true;
+        for j in 0..num {
+            let ch = content.chars().nth((i + j) as usize).unwrap();
+            let item = map.get(&ch);
+            if let Some(_) = item {
+                has_found = false;
+                break;
+            }
+            map.insert(ch, 1);
+        }
+        if has_found {
+            return i + num;
+        }
+    }
+    return 0;
 }
 
 fn main() -> Result<()> {
@@ -13,21 +29,11 @@ fn main() -> Result<()> {
     println!("file_name: {:?}", file_name);
 
     let content = fs::read_to_string(file_name)?;
+    let res = calc_solution(content, 14);
 
-    for i in 0..content.len() {
-        let a = content.chars().nth(i).unwrap();
-        let b = content.chars().nth(i + 1).unwrap();
-        let c = content.chars().nth(i + 2).unwrap();
-        let d = content.chars().nth(i + 3).unwrap();
+    println!("res: {}", res);
 
-        if a != b && a != c && a != d &&
-            b!= c && b != d &&
-            c != d
-        {
-            println!("Res: {}", i+4);
-            break;
-        }
-    }
+
 
     return Ok(());
 }
