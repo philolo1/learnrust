@@ -24,7 +24,7 @@ impl FromStr for File {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct Directory {
     parent: Option<Box<Directory>>,
     current_path: String,
@@ -76,7 +76,7 @@ fn main() -> Result<()> {
 
     println!("Commands: {:?}", commands);
 
-    let mut current_dic = Box::new(main_dir.clone());
+    let mut current_dic = &mut main_dir;
 
     for command in commands {
         let split_opt = command.split_once("\n");
@@ -85,28 +85,36 @@ fn main() -> Result<()> {
             println!("cd {}", command);
             let cmd = command[2..].trim().to_string();
             if cmd == "/" {
-                current_dic = Box::new(main_dir.clone())
+                current_dic = &mut main_dir
             } else if cmd == ".." {
-                current_dic = current_dic.parent.unwrap()
-            } else {
+                current_dic = &mut current_dic.parent.unwrap()
+            } /* else {
                 for dic in &current_dic.directories {
                     println!("Hello world");
                     if dic.current_path == cmd {
                         println!("path found");
                         // TODO this might make problems
-                        current_dic = Box::new(dic.clone());
+                        current_dic = &mut dic;
                         break;
                     }
                 }
             }
+              */
         }
 
-        if let Some((_,b)) = split_opt {
-            // println!("ls {}\n {}", a, b);
+        if let Some((a,b)) = split_opt {
+            println!("LS {}\n {}", a, b);
             let dics: Vec<&str> = b.lines().filter(|x| x.contains("dir")).collect();
 
-            current_dic.add_dics(&dics);
+            println!("Dics {:?}", dics);
 
+            current_dic.add_dics(&dics);
+            println!("main_dics {:?}", current_dic);
+            println!("main_dics {:?}", main_dir);
+
+            todo!("Here");
+
+            // println!("main_dics {:?}", current_dic);
             // println!("DIR {:?}", dics);
 
             let files: Vec<&str> = b.lines().filter(|x| !x.contains("dir")).collect();
