@@ -23,6 +23,37 @@ impl Message  {
     }
 }
 
+#[derive(Debug)]
+enum UsState {
+    Alabama,
+    Alaska,
+    California,
+    // ...
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState)
+}
+
+
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
+            1
+        },
+        Coin::Quarter(state) => {
+            println!("The state is {:?}", state);
+            25
+        },
+        _ => 0
+    }
+}
+
 fn main() {
     let four = IpAddrKind::V4;
     let six = IpAddrKind::V6;
@@ -46,4 +77,20 @@ fn main() {
 
     println!("some code : {}", sum);
 
+    value_in_cents(Coin::Quarter(UsState::California));
+
+    println!("Test: {:?}", plus_one(Some(4)));
+    println!("Test: {:?}", plus_one(None));
+}
+
+fn plus_one(x: Option<i32>) -> Option<i32> {
+
+    if let Some(3) = x {
+        println!("3");
+    }
+
+    match x {
+        Some(i)  => Some(i +1),
+        _ => None,
+    }
 }
