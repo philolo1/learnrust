@@ -1,3 +1,5 @@
+mod chapter11;
+
 struct User {
     username: String,
     email: String,
