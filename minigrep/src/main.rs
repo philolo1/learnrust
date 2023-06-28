@@ -12,15 +12,21 @@ fn main() -> Result<(),  Box<dyn Error>> {
 
     let config = Config::new(&args)?;
 
+
+    return run(config);
+}
+
+fn run(config: Config) -> Result<(),  Box<dyn Error>> {
+
     println!("Searching for {}", config.query);
     println!("File {}", config.filename);
 
     let  contents = fs::read_to_string(config.filename)?;
 
     println!("Content: {}", contents);
-
-    return Ok(());
+    Ok(())
 }
+
 impl Config {
     fn new(args: &[String]) -> Result<Config, &str> {
 
