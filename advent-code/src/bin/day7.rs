@@ -1,4 +1,4 @@
-use std::{fs, str::FromStr};
+use std::{fs, str::FromStr, rc::{Weak, Rc}, cell::RefCell};
 use anyhow::{Error, Result, Context};
 use std::env;
 
@@ -26,9 +26,9 @@ impl FromStr for File {
 
 #[derive(Debug)]
 struct Directory {
-    parent: Option<Box<Directory>>,
+    parent: Weak<RefCell<Directory>>,
     current_path: String,
-    directories: Vec<Directory>,
+    directories: RefCell<Vec<Rc<RefCell<Directory>>>>,
     files: Vec<File>
 }
 
@@ -40,20 +40,20 @@ impl Directory {
             .collect();
     }
 
-    fn add_dics(&mut self, dics: &Vec<&str>) {
-        let new_box = Box::new(self.clone());
-        self.directories = dics
+    fn add_dics(&mut self, dics: &Vec<&str>, parent: &Rc<RefCell<Directory>>) {
+        self.directories = RefCell::new(dics
             .iter()
             .map(|x| {
                 let (_, name) = x.split_once(' ').unwrap();
-                return Directory {
-                    parent: Some(new_box.clone()),
+                return Rc::new(RefCell::new(Directory {
+                    parent: Rc::downgrade(parent),
                     current_path: String::from(name),
-                    directories: vec![],
+                    directories: RefCell::new(vec![]),
                     files: vec![]
-                }
+                }))
             })
-            .collect();
+            .collect()
+        );
     }
 }
 
@@ -65,42 +65,62 @@ fn main() -> Result<()> {
 
     let content = fs::read_to_string(file_name)?;
 
-    let mut main_dir = Directory{
-        parent: None,
+    let main_dir = Rc::new(RefCell::new(Directory{
+        parent: Weak::new(),
         current_path: String::from("/"),
-        directories: vec![],
+        directories: RefCell::new(vec![]),
         files: vec![]
-    };
+    }));
 
-    let commands: Vec<&str> = content.split("$").filter(|x| x.len() > 0).map(|x| x.trim()).collect();
+   let commands: Vec<&str> = content.split("$").filter(|x| x.len() > 0 && !x.contains("// ")).map(|x| x.trim()).collect();
 
-    println!("Commands: {:?}", commands);
+   println!("Commands: {:?}", commands);
 
-    let mut current_dic = &mut main_dir;
+   let mut current_dic = Rc::clone(&main_dir);
+
 
     for command in commands {
+        println!("\n\nPROCESS COMMAND \n \n");
         let split_opt = command.split_once("\n");
 
         if let None = split_opt {
             println!("cd {}", command);
             let cmd = command[2..].trim().to_string();
             if cmd == "/" {
-                current_dic = &mut main_dir
+                current_dic = Rc::clone(&main_dir);
+                println!("This works!");
             } else if cmd == ".." {
-                current_dic = &mut current_dic.parent.unwrap()
-            } /* else {
-                for dic in &current_dic.directories {
-                    println!("Hello world");
-                    if dic.current_path == cmd {
-                        println!("path found");
-                        // TODO this might make problems
-                        current_dic = &mut dic;
-                        break;
+                let res = current_dic.borrow().parent.upgrade().unwrap();
+                current_dic = Rc::clone(&res);
+                println!("Cloned")
+            } else {
+
+                println!("HERE {}", cmd);
+
+                let mut my_res = None;
+                {
+                    let dict_mut = current_dic.borrow_mut();
+                    let dictionaries = dict_mut.directories.borrow();
+
+
+                    for dic in dictionaries.iter()  {
+                        println!("Hello world");
+
+                        if dic.borrow().current_path == cmd {
+                            println!("path found");
+                            // TODO this might make problems
+                            my_res = Some(Rc::clone(dic));
+                            
+                            break;
+                        }
                     }
                 }
+
+                current_dic = my_res.unwrap();
+
             }
-              */
         }
+    
 
         if let Some((a,b)) = split_opt {
             println!("LS {}\n {}", a, b);
@@ -108,29 +128,23 @@ fn main() -> Result<()> {
 
             println!("Dics {:?}", dics);
 
-            current_dic.add_dics(&dics);
-            println!("main_dics {:?}", current_dic);
-            println!("main_dics {:?}", main_dir);
+            current_dic.borrow_mut().add_dics(&dics, &current_dic);
 
-            todo!("Here");
-
-            // println!("main_dics {:?}", current_dic);
-            // println!("DIR {:?}", dics);
 
             let files: Vec<&str> = b.lines().filter(|x| !x.contains("dir")).collect();
+            current_dic.borrow_mut().add_files(&files);
 
-            current_dic.add_files(&files);
-
-            // println!("Files {:?}", files);
+            println!("Files {:?}", files);
 
 
-            // println!("current_dic {:?}", current_dic);
+            println!("current_dic {:?}", current_dic);
 
         }
     }
 
 
-    println!("main_dics {:?}", current_dic);
+    println!("current dicts {:?}", current_dic);
+    println!("main dicts {:?}", main_dir);
 
 
     return Ok(());

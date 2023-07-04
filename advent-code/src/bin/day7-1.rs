@@ -81,9 +81,5 @@ fn main() -> Result<()> {
     println!("res2 : {}", res2.num);
     println!("res : {}", res.num);
 
-
-
-
-
     return Ok(());
 }
