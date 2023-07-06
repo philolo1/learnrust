@@ -98,6 +98,49 @@ fn main() ->  Result<()> {
 
     println!("SUM: {}", sum);
 
+    let sum = 0;
+
+    let mut new_max = 0;
+
+    for y in 1..(col_size-1) {
+        for x in 1..(row_size-1) {
+            let mut x1 = 1;
+
+            while x - x1  >= 1 && tree_arr[y][x].value > tree_arr[y][x-x1].value {
+                x1 +=1 ;
+            }
+
+            let mut x2 = 1;
+
+            while x +x2  + 1 < row_size && tree_arr[y][x].value > tree_arr[y][x+x2].value {
+                x2 +=1 ;
+            }
+
+            let mut y1 = 1;
+
+            while y - y1  >= 1 && tree_arr[y][x].value > tree_arr[y-y1][x].value {
+                y1 +=1 ;
+            }
+
+            let mut y2 = 1;
+
+            while y +y2  + 1 < col_size && tree_arr[y][x].value > tree_arr[y+y2][x].value {
+                y2 +=1 ;
+            }
+
+            let res = x1*x2*y1*y2;
+
+            println!("y: {}, x: {}, {},{},{},{} res: {}", x, y, x1, x2, y1, y2,  res);
+
+            if res > new_max {
+                new_max = res;
+            }
+
+        }
+    }
+
+    println!("New max: {}", new_max);
+
 
     Ok(())
 }
