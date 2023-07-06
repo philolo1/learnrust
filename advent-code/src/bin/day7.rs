@@ -50,10 +50,19 @@ impl Directory {
             d.borrow().print(level);
         }
 
-
-
     }
 
+    fn calculate_filtered_sum(&self) -> u32 {
+        let sum =self.calculate_sum() ;
+
+        let sum = if sum < 100_000 { sum } else {0};
+
+        let sum_2 : u32 = self.directories.borrow().iter()
+        .map(|d| d.borrow().calculate_filtered_sum()).sum();
+
+
+        return sum + sum_2;
+    }
 
     // calculates the size of the dictionary
     fn calculate_sum(&self) -> u32 {
@@ -184,12 +193,13 @@ fn main() -> Result<()> {
     // println!("current dicts {:?}", current_dic);
     // println!("main dicts {:?}", main_dir);
 
-    println!("Sum {}", main_dir.borrow().calculate_sum());
 
 
     println!("Summary: ");
     main_dir.borrow().print(0);
 
+    println!("Sum {}", main_dir.borrow().calculate_sum());
+    println!("Sum2 {}", main_dir.borrow().calculate_filtered_sum());
 
 
     return Ok(());
