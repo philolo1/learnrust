@@ -64,6 +64,18 @@ impl Directory {
         return sum + sum_2;
     }
 
+    fn calculate_smallest_dict(&self, smallest_num: &mut u32, needed_space: u32)  {
+        let dic_sum =self.calculate_sum();
+
+        if dic_sum < *smallest_num && dic_sum >= needed_space {
+            *smallest_num = dic_sum;
+        }
+
+        for d in self.directories.borrow().iter() {
+            d.borrow().calculate_smallest_dict(smallest_num, needed_space);
+        }
+    }
+
     // calculates the size of the dictionary
     fn calculate_sum(&self) -> u32 {
 
@@ -201,6 +213,20 @@ fn main() -> Result<()> {
     println!("Sum {}", main_dir.borrow().calculate_sum());
     println!("Sum2 {}", main_dir.borrow().calculate_filtered_sum());
 
+    let available_space = 70_000_000 - main_dir.borrow().calculate_sum();
+
+    let needed_space = 30_000_000 - available_space;
+
+    println!("needed space: {}", needed_space.separate_with_commas());
+
+    let mut smallest_size =main_dir.borrow().calculate_sum();
+
+    println!("Smallest dict size: {}", smallest_size.separate_with_commas());
+
+
+     main_dir.borrow().calculate_smallest_dict(&mut smallest_size, needed_space);
+
+    println!("Smallest dict size: {}", smallest_size);
 
     return Ok(());
 }
