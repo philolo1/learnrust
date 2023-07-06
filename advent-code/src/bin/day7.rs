@@ -4,7 +4,7 @@ use std::env;
 
 #[derive(Debug, Clone)]
 struct File {
-    size: usize,
+    size: u32,
     name: String
 }
 
@@ -33,6 +33,31 @@ struct Directory {
 }
 
 impl Directory {
+
+    fn print(&self, level: Option<usize>) {
+        let level = level.unwrap_or(0);
+        let space = " ".repeat(level);
+        println!("{space}{}", self.current_path);
+    }
+
+
+    // calculates the size of the dictionary
+    fn calculate_sum(&self) -> u32 {
+
+        let sum_files: u32 = self.files.iter()
+            .map(|file| file.size).sum();
+
+        let sum_dics: u32 = self.directories.borrow().iter()
+            .map(
+                |dic| dic.borrow().calculate_sum()
+            )
+            .sum();
+
+
+        return sum_files + sum_dics;
+    }
+
+
     fn add_files(&mut self, files: &Vec<&str>) {
         self.files = files
             .iter()
@@ -60,10 +85,7 @@ impl Directory {
 
 
 fn main() -> Result<()> {
-    let file_name = env::args().nth(1).context("one file is necessary")?;
-    println!("file_name: {:?}", file_name);
-
-    let content = fs::read_to_string(file_name)?;
+    let content = get_content()?;
 
     let main_dir = Rc::new(RefCell::new(Directory{
         parent: Weak::new(),
@@ -72,7 +94,9 @@ fn main() -> Result<()> {
         files: vec![]
     }));
 
-   let commands: Vec<&str> = content.split("$").filter(|x| x.len() > 0 && !x.contains("// ")).map(|x| x.trim()).collect();
+   let commands: Vec<&str> = content.split("$")
+     .filter(|x| x.len() > 0 && !x.contains("// "))
+    .map(|x| x.trim()).collect();
 
    println!("Commands: {:?}", commands);
 
@@ -143,9 +167,24 @@ fn main() -> Result<()> {
     }
 
 
-    println!("current dicts {:?}", current_dic);
-    println!("main dicts {:?}", main_dir);
+    // println!("current dicts {:?}", current_dic);
+    // println!("main dicts {:?}", main_dir);
+
+    println!("Sum {}", main_dir.borrow().calculate_sum());
+
+
+    
+
+    main_dir.borrow().print(None);
+
 
 
     return Ok(());
+}
+
+fn get_content() -> Result<String, Error> {
+    let file_name = env::args().nth(1).context("one file is necessary")?;
+    println!("file_name: {:?}", file_name);
+    let content = fs::read_to_string(file_name)?;
+    Ok(content)
 }
