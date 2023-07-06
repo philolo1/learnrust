@@ -1,6 +1,8 @@
 use std::{fs, str::FromStr, rc::{Weak, Rc}, cell::RefCell};
 use anyhow::{Error, Result, Context};
 use std::env;
+use thousands::Separable;
+
 
 #[derive(Debug, Clone)]
 struct File {
@@ -34,10 +36,22 @@ struct Directory {
 
 impl Directory {
 
-    fn print(&self, level: Option<usize>) {
-        let level = level.unwrap_or(0);
+    fn print(&self, level: usize) {
         let space = " ".repeat(level);
-        println!("{space}{}", self.current_path);
+        println!("{space}- {} (dir, size={})", self.current_path, self.calculate_sum().separate_with_commas());
+        let level = level + 2;
+        let space = " ".repeat(level);
+
+        for f in self.files.iter() {
+          println!("{space}- {} (file, size={})", f.name, f.size.separate_with_commas())
+        }
+
+        for d in self.directories.borrow().iter() {
+            d.borrow().print(level);
+        }
+
+
+
     }
 
 
@@ -173,9 +187,8 @@ fn main() -> Result<()> {
     println!("Sum {}", main_dir.borrow().calculate_sum());
 
 
-    
-
-    main_dir.borrow().print(None);
+    println!("Summary: ");
+    main_dir.borrow().print(0);
 
 
 
