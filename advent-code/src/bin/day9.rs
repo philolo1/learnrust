@@ -8,12 +8,16 @@ fn main() ->  Result<()> {
     let file_name = env::args().nth(1).context("One file is necessary")?;
     let content = fs::read_to_string(file_name)?;
 
-    let mut tail = (0, 0);
-    let mut head = (0, 0);
+
+    let mut arr : Vec<(i32, i32)> = vec![];
+
+    for _ in 0..10 {
+        arr.push((0,0));
+    }
 
     let mut map : HashMap<(i32,i32), bool> = HashMap::new();
 
-    map.insert(tail, true);
+    map.insert(arr[0], true);
 
     for line in content.lines() {
         let (left, right) = line.split_once(' ').context("Something")?;
@@ -23,62 +27,74 @@ fn main() ->  Result<()> {
 
         println!("Value: '{}' '{}'", left, right);
 
-        for i in 0..amount {
-            println!("close {:?} {:?}", tail, head);
+        for _ in 0..amount {
+            println!("close {:?}", arr);
+
+            let last_el = arr[9];
+
             match symbol {
                 "R" => {
                     println!("R");
-                    head.0 += 1;
+                    arr[9] = (last_el.0 + 1, last_el.1);
                 },
                 "L" => {
                     println!("L");
-                    head.0 -= 1;
+                    arr[9] = (last_el.0 - 1, last_el.1);
                 },
                 "U" => {
                     println!("U");
-                    head.1 += 1;
+                    arr[9] = (last_el.0, last_el.1 + 1);
                 },
                 "D" => {
                     println!("D");
-                    head.1 -= 1;
+                    arr[9] = (last_el.0, last_el.1 - 1);
                 },
                 _ => {
                     panic!("Unknown command");
                 }
             }
 
-            if (tail.0 - head.0).abs() <= 1 && (tail.1-head.1).abs() <=1 {
-                // they touch so nothing to do
-                continue;
-            }
+            for pos in (1..10).rev() {
+                let mut head = arr[pos];
+                let mut tail = arr[pos - 1];
 
-            if tail.0 == head.0 {
-                if tail.1 > head.1 {
-                    tail.1 -= 1;
-                } else {
-                    tail.1 += 1;
-                }
-            } else if tail.1 == head.1 {
-                if tail.0 > head.0 {
-                    tail.0 -= 1;
-                } else {
-                    tail.0 += 1;
-                }
-            } else {
-                if head.0 > tail.0 {
-                    tail.0 += 1;
-                } else {
-                    tail.0 -= 1;
+
+                if (tail.0 - head.0).abs() <= 1 && (tail.1-head.1).abs() <=1 {
+                    // they touch so nothing to do
+                    continue;
                 }
 
-                if head.1 > tail.1 {
-                    tail.1 += 1
+                if tail.0 == head.0 {
+                    if tail.1 > head.1 {
+                        tail.1 -= 1;
+                    } else {
+                        tail.1 += 1;
+                    }
+                } else if tail.1 == head.1 {
+                    if tail.0 > head.0 {
+                        tail.0 -= 1;
+                    } else {
+                        tail.0 += 1;
+                    }
                 } else {
-                    tail.1 -= 1
+                    if head.0 > tail.0 {
+                        tail.0 += 1;
+                    } else {
+                        tail.0 -= 1;
+                    }
+
+                    if head.1 > tail.1 {
+                        tail.1 += 1
+                    } else {
+                        tail.1 -= 1
+                    }
                 }
-            }
+
+                arr[pos -1 ] = (tail.0, tail.1);
+
+           }
             println!("insert");
-            map.insert(tail, true);
+            map.insert(arr[0], true);
         }
     }
 
