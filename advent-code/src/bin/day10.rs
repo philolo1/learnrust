@@ -44,17 +44,36 @@ impl Item {
     }
 
     fn increaseTime(&mut self, add: i32) {
+
+        let number = (self.time + 39) % 40;
+
+        // println!("Number: {}", number);
+        // panic!("ok");
+
+
+        if (number - self.value).abs() <=1 {
+            print!("#");
+        } else {
+            print!(".");
+        }
+
+        if number == 39 {
+            println!();
+        }
+
+
         self.time += 1;
         self.value += add;
 
         match self.time {
             20|60|100|140|180|220 => {
-                println!("Circle (time: {} value: {})", self.time, self.value);
+                // println!("Circle (time: {} value: {})", self.time, self.value);
                 self.result += self.time * self.value;
             },
             _ => {
             }
         }
+
     }
 }
 
