@@ -4,16 +4,28 @@ use std::env;
 use std::collections::HashMap;
 use itertools::Itertools;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum OpItem {
     Value,
     Num(i32)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Operator {
     Plus,
     Times,
+}
+
+
+impl OpItem {
+    fn new(str: &str) -> OpItem {
+        let num: Result<i32, _> = str.parse();
+
+        match num {
+            Ok(val) => OpItem::Num(val),
+            Err(_) => OpItem::Value,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -25,7 +37,74 @@ struct Operation {
 
 impl Operation {
     fn new(content: &str) -> Operation {
-        Operation { left: OpItem::Value, operator: Operator::Plus, right: OpItem::Value }
+        // Operation: new = old * 19"
+        let str = content.split_once("= ").unwrap().1;
+
+
+
+        let op = if str.contains("*") {
+            Operator::Times
+        } else {
+            Operator::Plus
+        };
+
+
+        let (left, right) = match op {
+            Operator::Times => {
+                str.split_once(" * ").unwrap()
+            },
+            Operator::Plus => {
+                str.split_once(" + ").unwrap()
+            },
+        };
+
+
+        Operation {
+            left: OpItem::new(left),
+            operator: op,
+            right: OpItem::new(right)
+        }
+    }
+}
+
+mod tests {
+    use super::Operation;
+    use super::Operator;
+    use super::OpItem;
+
+    fn my_test(str: &str, op1: OpItem, op2: Operator, op3: OpItem) {
+        let op = Operation::new(str);
+
+        assert_eq!(op1, op.left);
+        assert_eq!(op2, op.operator);
+        assert_eq!(op3, op.right);
+    }
+
+    #[test]
+    #[cfg(test)]
+    fn test_new() {
+        my_test(
+            " Operation: new = old * 19",
+            OpItem::Value,
+            Operator::Times,
+            OpItem::Num(19)
+        );
+
+        my_test(
+
+  "Operation: new = old + 6",
+  OpItem::Value,
+  Operator::Plus,
+  OpItem::Num((6))
+        );
+
+        my_test(
+
+  "Operation: new = old * old",
+  OpItem::Value,
+  Operator::Times,
+  OpItem::Value
+        );
     }
 }
 
@@ -101,9 +180,23 @@ fn main() ->  Result<()> {
     let monkey_data: Vec<&str> = content.split("Monkey").filter(|x| x.len() > 0).collect();
 
     let mut counter = 0;
+
+    let mut monkeys: Vec<Box<Monkey>> = vec![];
+
     for item in monkey_data {
-        let monkey = Monkey::new(item, &mut counter);
+        let monkey = Box::new(Monkey::new(item, &mut counter));
         println!("{:?}", monkey);
+        monkeys.push(monkey);
+    }
+
+    for round in 1..2 {
+        println!("round {}", round);
+
+        for m in monkeys.iter_mut() {
+            while let Some(item) = m.items.pop()  {
+                println!("{} Item: {}", m.label, item);
+            }
+        }
     }
 
 
