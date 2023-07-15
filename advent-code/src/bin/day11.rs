@@ -118,7 +118,8 @@ struct Monkey {
     operation: Operation,
     divisible: i32,
     true_case: i32,
-    false_case: i32
+    false_case: i32,
+    inspect_number: i32
 }
 
 impl Monkey {
@@ -165,12 +166,17 @@ impl Monkey {
             divisible,
             true_case,
             false_case,
+            inspect_number: 0
         };
         *label += 1;
 
         return monkey;
 
 
+    }
+
+    fn increase_inspect(&mut self) {
+        self.inspect_number +=  self.items.len() as i32;
     }
 
     fn calculate(&mut self, num: &i32) -> i32 {
@@ -213,11 +219,12 @@ fn main() ->  Result<()> {
         monkeys.push(monkey);
     }
 
-    for round in 1..2 {
+    for round in 1..21 {
         println!("round {}", round);
 
         for index in 0..monkeys.len() {
             let mut m = monkeys.get(index).unwrap().borrow_mut();
+            m.increase_inspect();
 
 
             while let Some(i) = m.items.pop() {
@@ -243,21 +250,30 @@ fn main() ->  Result<()> {
 
         }
 
-        // for m in monkeys.iter_mut() {
-        //     // while let Some(item) = m.items.pop()  {
-        //     //     println!("{} Item: {}", m.label, item);
-        //     // }
-        //     let v = monkeys[0];
-        // }
+    for i in 0..monkeys.len() {
+        println!("Monkey {}", monkeys.get(i).unwrap().borrow().label);
+        println!("\t items: {:?}", monkeys.get(i).unwrap().borrow().items);
+
+    }
+
     }
 
     println!("Round finished");
 
-    for m in monkeys {
-        println!("Monkey {}", m.borrow().label);
-        println!("\t items: {:?}", m.borrow().items);
+    let mut arr = vec![];
 
+    for i in 0..monkeys.len() {
+        let monkey = monkeys.get(i).unwrap().borrow();
+        println!("Monkey {} number: {}", monkey.label, monkey.inspect_number);
+        arr.push(monkey.inspect_number);
     }
+
+    arr.sort();
+
+    let (a, b) = (arr[arr.len() - 1], arr[arr.len() - 2]);
+
+    println!("res: {} {} {}", a, b, a*b);
+
 
 
     Ok(())
