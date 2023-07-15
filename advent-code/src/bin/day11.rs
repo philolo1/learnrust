@@ -98,7 +98,7 @@ mod tests {
   "Operation: new = old + 6",
   OpItem::Value,
   Operator::Plus,
-  OpItem::Num((6))
+  OpItem::Num(6)
         );
 
         my_test(
@@ -112,9 +112,26 @@ mod tests {
 }
 
 #[derive(Debug)]
+struct WorryNumber {
+    num: i32,
+    values: Vec<i32>,
+    dividers: Rc<Vec<i32>>,
+}
+
+impl WorryNumber {
+    fn new(num: i32) -> WorryNumber {
+        WorryNumber {
+            num,
+            values: vec![],
+            dividers: Rc::new(vec![])
+        }
+    }
+}
+
+#[derive(Debug)]
 struct Monkey {
     label: i32,
-    items: Vec<i32>,
+    items: Vec<WorryNumber>,
     operation: Operation,
     divisible: i32,
     true_case: i32,
@@ -131,9 +148,10 @@ impl Monkey {
         let start_items = arr.pop().unwrap();
         let (_, start_items) = start_items.split_once(":").unwrap();
         println!("start_items: {:?}", start_items);
-        let start_items: Vec<i32> = start_items
+        let start_items: Vec<WorryNumber> = start_items
             .split(",")
             .flat_map(|x| x.trim().parse())
+            .map(|x| WorryNumber::new(x))
             .collect();
 
         println!("Test: {:?}", start_items);
@@ -179,7 +197,14 @@ impl Monkey {
         self.inspect_number +=  self.items.len() as i32;
     }
 
-    fn calculate(&mut self, num: &i32) -> i32 {
+    fn calculate(&mut self, num: &mut WorryNumber, dividers: &mut Vec<i32>) -> i32 {
+
+        if num.values.len() == 0 {
+            num.add_dividers(dividers);
+        }
+
+
+
         let num = *num;
 
         let left_number = match self.operation.left {
@@ -192,9 +217,11 @@ impl Monkey {
             OpItem::Num(v) => v,
         };
 
+        const PRIME: i32 = 7_919;
+
         let result = match self.operation.operator {
-            Operator::Plus => left_number + right_number,
-            Operator::Times => left_number * right_number,
+            Operator::Plus => (left_number + right_number) % PRIME,
+            Operator::Times => (left_number * right_number) % PRIME,
         };
 
         return result
@@ -213,13 +240,20 @@ fn main() ->  Result<()> {
 
     let mut monkeys: Vec<Rc<RefCell<Monkey>>> = vec![];
 
+    let mut dividers = vec![];
+
     for item in monkey_data {
         let monkey = Rc::new(RefCell::new(Monkey::new(item, &mut counter)));
         println!("{:?}", monkey);
+        dividers.push(monkey.borrow().divisible);
         monkeys.push(monkey);
     }
 
-    for round in 1..21 {
+    println!("Dividers: {:?}", dividers);
+
+
+
+    for round in 1..2 {
         println!("round {}", round);
 
         for index in 0..monkeys.len() {
@@ -228,24 +262,24 @@ fn main() ->  Result<()> {
 
 
             while let Some(i) = m.items.pop() {
-                println!("Item {}\n", i);
+                println!("Item {:?}\n", i);
 
-                let mut new_number = i;
-                println!("new_number {}", new_number);
-                new_number = m.calculate(&new_number);
-                println!("new_number {}", new_number);
-                new_number = new_number / 3;
-                println!("new_number {}", new_number);
+               let mut new_number = i;
+               println!("new_number {:?}", new_number);
+               new_number = m.calculate(&new_number, &mut dividers);
+               //  println!("new_number {}", new_number);
+               //  // new_number = new_number / 3;
+               //  println!("new_number {}", new_number);
 
-                let index = match new_number % m.divisible {
-                    0 => m.true_case,
-                    _ => m.false_case
-                };
+               //  let index = match new_number % m.divisible {
+               //      0 => m.true_case,
+               //      _ => m.false_case
+               //  };
 
-                println!("index {}", index);
+               //  println!("index {}", index);
 
-                let monkey_2 = monkeys.get(index as usize).unwrap();
-                monkey_2.borrow_mut().items.push(new_number);
+               //  let monkey_2 = monkeys.get(index as usize).unwrap();
+               //  monkey_2.borrow_mut().items.push(new_number);
             }
 
         }
