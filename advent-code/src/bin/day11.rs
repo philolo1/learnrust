@@ -4,13 +4,16 @@ use std::env;
 use std::collections::HashMap;
 use itertools::Itertools;
 
-#[derive(Debug, PartialEq)]
+use std::cell::{RefCell};
+use std::rc::{Rc};
+
+#[derive(Debug, PartialEq, Clone)]
 enum OpItem {
     Value,
     Num(i32)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum Operator {
     Plus,
     Times,
@@ -169,6 +172,26 @@ impl Monkey {
 
 
     }
+
+    fn calculate(self, num: i32) -> i32 {
+
+        let left_number = match self.operation.left {
+            OpItem::Value => num,
+            OpItem::Num(v) => v,
+        };
+
+        let right_number = match self.operation.right {
+            OpItem::Value => num,
+            OpItem::Num(v) => v,
+        };
+
+        let result = match self.operation.operator {
+            Operator::Plus => left_number + right_number,
+            Operator::Times => left_number * right_number,
+        };
+
+        return result
+    }
 }
 
 
@@ -181,10 +204,10 @@ fn main() ->  Result<()> {
 
     let mut counter = 0;
 
-    let mut monkeys: Vec<Box<Monkey>> = vec![];
+    let mut monkeys: Vec<Rc<RefCell<Monkey>>> = vec![];
 
     for item in monkey_data {
-        let monkey = Box::new(Monkey::new(item, &mut counter));
+        let monkey = Rc::new(RefCell::new(Monkey::new(item, &mut counter)));
         println!("{:?}", monkey);
         monkeys.push(monkey);
     }
@@ -192,11 +215,29 @@ fn main() ->  Result<()> {
     for round in 1..2 {
         println!("round {}", round);
 
-        for m in monkeys.iter_mut() {
-            while let Some(item) = m.items.pop()  {
-                println!("{} Item: {}", m.label, item);
+        for index in 0..monkeys.len() {
+            let mut m = monkeys.get(index).unwrap().borrow_mut();
+
+
+            while let Some(i) = m.items.pop() {
+                println!("Item {}", i);
+
+                let new_number = i;
+
+                // TODO calculate
+
+
+
             }
+
         }
+
+        // for m in monkeys.iter_mut() {
+        //     // while let Some(item) = m.items.pop()  {
+        //     //     println!("{} Item: {}", m.label, item);
+        //     // }
+        //     let v = monkeys[0];
+        // }
     }
 
 
