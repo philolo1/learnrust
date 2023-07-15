@@ -173,7 +173,8 @@ impl Monkey {
 
     }
 
-    fn calculate(self, num: i32) -> i32 {
+    fn calculate(&mut self, num: &i32) -> i32 {
+        let num = *num;
 
         let left_number = match self.operation.left {
             OpItem::Value => num,
@@ -220,14 +221,24 @@ fn main() ->  Result<()> {
 
 
             while let Some(i) = m.items.pop() {
-                println!("Item {}", i);
+                println!("Item {}\n", i);
 
-                let new_number = i;
+                let mut new_number = i;
+                println!("new_number {}", new_number);
+                new_number = m.calculate(&new_number);
+                println!("new_number {}", new_number);
+                new_number = new_number / 3;
+                println!("new_number {}", new_number);
 
-                // TODO calculate
+                let index = match new_number % m.divisible {
+                    0 => m.true_case,
+                    _ => m.false_case
+                };
 
+                println!("index {}", index);
 
-
+                let monkey_2 = monkeys.get(index as usize).unwrap();
+                monkey_2.borrow_mut().items.push(new_number);
             }
 
         }
@@ -238,6 +249,14 @@ fn main() ->  Result<()> {
         //     // }
         //     let v = monkeys[0];
         // }
+    }
+
+    println!("Round finished");
+
+    for m in monkeys {
+        println!("Monkey {}", m.borrow().label);
+        println!("\t items: {:?}", m.borrow().items);
+
     }
 
 
