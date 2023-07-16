@@ -1,8 +1,6 @@
-use std::{fs, str::FromStr};
-use anyhow::{anyhow, Error, Result, Context};
+use std::{fs};
+use anyhow::{Result, Context};
 use std::env;
-use std::collections::HashMap;
-use itertools::Itertools;
 
 use std::cell::{RefCell};
 use std::rc::{Rc};
@@ -115,15 +113,19 @@ mod tests {
 struct WorryNumber {
     num: i32,
     values: Vec<i32>,
-    dividers: Rc<Vec<i32>>,
 }
 
 impl WorryNumber {
-    fn new(num: i32) -> WorryNumber {
+    fn new(num: i32, amount: i32) -> WorryNumber {
+        let mut values = vec![];
+
+        for i in 0..amount {
+            values.push(num);
+        }
+
         WorryNumber {
             num,
-            values: vec![],
-            dividers: Rc::new(vec![])
+            values,
         }
     }
 }
@@ -140,7 +142,7 @@ struct Monkey {
 }
 
 impl Monkey {
-    fn new(content: &str, label: &mut i32) -> Monkey {
+    fn new(content: &str, label: &mut i32, items_count: i32) -> Monkey {
         let mut arr: Vec<&str> = content.split('\n').skip(1).collect();
         println!("Item {:?}", arr.reverse());
 
@@ -151,7 +153,7 @@ impl Monkey {
         let start_items: Vec<WorryNumber> = start_items
             .split(",")
             .flat_map(|x| x.trim().parse())
-            .map(|x| WorryNumber::new(x))
+            .map(|x| WorryNumber::new(x, items_count))
             .collect();
 
         println!("Test: {:?}", start_items);
@@ -197,34 +199,40 @@ impl Monkey {
         self.inspect_number +=  self.items.len() as i32;
     }
 
-    fn calculate(&mut self, num: &mut WorryNumber, dividers: &mut Vec<i32>) -> i32 {
+    fn calculate(&mut self, num_ref: &mut WorryNumber, dividers: &mut Vec<i32>)  {
 
-        if num.values.len() == 0 {
-            num.add_dividers(dividers);
-        }
+        for index in 0..dividers.len() {
+            let num = num_ref.values[index];
 
+            let left_number = match self.operation.left {
+                OpItem::Value => num,
+                OpItem::Num(v) => v,
+            };
 
+            let right_number = match self.operation.right {
+                OpItem::Value => num,
+                OpItem::Num(v) => v,
+            };
 
-        let num = *num;
+            let prime: i32 = dividers[index];
 
-        let left_number = match self.operation.left {
-            OpItem::Value => num,
-            OpItem::Num(v) => v,
+            let result = match self.operation.operator {
+                Operator::Plus => (left_number + right_number) % prime,
+                Operator::Times => (left_number * right_number) % prime,
+            };
+
+            num_ref.values[index] = result;
         };
 
-        let right_number = match self.operation.right {
-            OpItem::Value => num,
-            OpItem::Num(v) => v,
+
+    }
+
+    fn get_new_index(&self,  worry_number: &WorryNumber) -> i32 {
+        let index = match worry_number.values[self.label as usize] {
+            0 => self.true_case,
+            _ => self.false_case
         };
-
-        const PRIME: i32 = 7_919;
-
-        let result = match self.operation.operator {
-            Operator::Plus => (left_number + right_number) % PRIME,
-            Operator::Times => (left_number * right_number) % PRIME,
-        };
-
-        return result
+        return index;
     }
 }
 
@@ -242,8 +250,10 @@ fn main() ->  Result<()> {
 
     let mut dividers = vec![];
 
+    let monkey_len = monkey_data.len();
+
     for item in monkey_data {
-        let monkey = Rc::new(RefCell::new(Monkey::new(item, &mut counter)));
+        let monkey = Rc::new(RefCell::new(Monkey::new(item, &mut counter, monkey_len as i32)));
         println!("{:?}", monkey);
         dividers.push(monkey.borrow().divisible);
         monkeys.push(monkey);
@@ -251,9 +261,7 @@ fn main() ->  Result<()> {
 
     println!("Dividers: {:?}", dividers);
 
-
-
-    for round in 1..2 {
+    for round in 1..10_001 {
         println!("round {}", round);
 
         for index in 0..monkeys.len() {
@@ -261,25 +269,20 @@ fn main() ->  Result<()> {
             m.increase_inspect();
 
 
-            while let Some(i) = m.items.pop() {
-                println!("Item {:?}\n", i);
+            while let Some(mut worry_number) = m.items.pop() {
+               println!("WorryNumber {:?}\n", worry_number);
 
-               let mut new_number = i;
-               println!("new_number {:?}", new_number);
-               new_number = m.calculate(&new_number, &mut dividers);
-               //  println!("new_number {}", new_number);
-               //  // new_number = new_number / 3;
-               //  println!("new_number {}", new_number);
+               // let mut new_number = worry_number;
+               println!("new_number {:?}", worry_number);
+               m.calculate(&mut worry_number, &mut dividers);
+               println!("new_number {:?}", worry_number);
 
-               //  let index = match new_number % m.divisible {
-               //      0 => m.true_case,
-               //      _ => m.false_case
-               //  };
+               let index = m.get_new_index(&worry_number);
 
-               //  println!("index {}", index);
+               println!("index {}", index);
 
-               //  let monkey_2 = monkeys.get(index as usize).unwrap();
-               //  monkey_2.borrow_mut().items.push(new_number);
+               let monkey_2 = monkeys.get(index as usize).unwrap();
+               monkey_2.borrow_mut().items.push(worry_number);
             }
 
         }
@@ -304,7 +307,7 @@ fn main() ->  Result<()> {
 
     arr.sort();
 
-    let (a, b) = (arr[arr.len() - 1], arr[arr.len() - 2]);
+    let (a, b) = (arr[arr.len() - 1] as i64, arr[arr.len() - 2] as i64);
 
     println!("res: {} {} {}", a, b, a*b);
 
