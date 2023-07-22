@@ -5,12 +5,21 @@ use std::{fs};
 use anyhow::{Result, Context};
 use std::env;
 use std::cmp::Ordering;
+use std::fmt;
 
 #[derive(Debug)]
 enum List {
     MyList(Vec<Rc<RefCell<List>>>),
     El(i32)
 }
+
+impl fmt::Display for List {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("LIST AB").unwrap();
+        return write!(f, "TEST");
+    }
+}
+
 
 fn compare_list(left: &Rc<RefCell<List>>, right: &Rc<RefCell<List>>) -> Ordering {
 
@@ -135,6 +144,7 @@ fn main() ->  Result<()> {
     let mut index = 0;
     let mut sum = 0;
     let mut arr: Vec<i32> = vec![];
+    let mut sort = vec![];
     for item in res {
         index+=1;
         let (left, right) = item.split_once('\n').unwrap();
@@ -147,18 +157,45 @@ fn main() ->  Result<()> {
 
         println!("Right: {:?}", right);
 
-        match compare_list(&Rc::new(RefCell::new(left)), &Rc::new(RefCell::new(right))) {
-            Ordering::Less => {
-                println!("TRUE");
-                arr.push(index);
-                sum += index;
+
+        let left_el = Rc::new(RefCell::new(left));
+        let right_el = Rc::new(RefCell::new(right));
+
+
+        {
+            match compare_list(&left_el.clone(), &right_el.clone()) {
+                Ordering::Less => {
+                    println!("TRUE");
+                    arr.push(index);
+                    sum += index;
+                }
+                Ordering::Greater|Ordering::Equal => {
+                    println!("FALSE");
+                },
             }
-            Ordering::Greater|Ordering::Equal => {
-                println!("FALSE");
-            },
         }
 
+        sort.push(Rc::new(left_el));
+        sort.push(Rc::new(right_el));
     }
+
+    /*
+    for el in sort {
+        println!("el {:?}", *el);
+    }
+    */
+
+
+    sort.sort_by(|a,b| {
+        return compare_list(&**a, &**b);
+    });
+
+    let mut index = 0;
+    for el in sort {
+        index += 1;
+        println!("index: {index} el {:?}", *el);
+    }
+
 
     println!("arr: {:?}", arr);
     println!("Index: {index} SUM: {}", sum);
