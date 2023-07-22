@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::{fs};
 use anyhow::{Result, Context};
 use std::env;
-
+use std::cmp::Ordering;
 
 #[derive(Debug)]
 enum List {
@@ -12,7 +12,7 @@ enum List {
     El(i32)
 }
 
-fn compare_list(left: &Rc<RefCell<List>>, right: &Rc<RefCell<List>>) -> bool {
+fn compare_list(left: &Rc<RefCell<List>>, right: &Rc<RefCell<List>>) -> Ordering {
 
     let left_el = left.borrow();
     let left_el = &*left_el;
@@ -21,26 +21,36 @@ fn compare_list(left: &Rc<RefCell<List>>, right: &Rc<RefCell<List>>) -> bool {
 
     match(left_el, right_el) {
         (List::MyList(v1), List::MyList(v2)) => {
+            println!("COMPARE L {} {}", v1.len(), v2.len());
             let len = min(v1.len(), v2.len());
 
             for i in 0..len {
                 let w1 = &v1[i];
                 let w2 = &v2[i];
-                if compare_list(w1,w2) == false {
-                    return false;
+                match compare_list(w1, w2) {
+                    Ordering::Less => return Ordering::Less,
+                    Ordering::Equal => {
+                        continue;
+                    },
+                    Ordering::Greater => return Ordering::Greater,
                 }
             }
 
             println!("HERE? {} {}", v1.len(), v2.len());
-            if v1.len() <= v2.len() {
-                return true;
+            if v1.len() < v2.len() {
+                return Ordering::Less;
             }
 
-            return false;
+
+            if v1.len() == v2.len() {
+                return Ordering::Equal;
+            }
+
+            return Ordering::Greater;
         },
         (List::El(e1), List::El(e2)) => {
-            println!("Compare {e1} to {e2}");
-            return e1 <= e2
+            println!("Compare {e1} to {e2} {:?}",  e1.cmp(&e2));
+            return e1.cmp(&e2)
         },
         (List::MyList(_), List::El(_)) => {
             let arr = vec![right.clone()];
@@ -62,13 +72,16 @@ fn create_list(s: &str, pos: &mut usize) -> List {
 
     let el = s.chars().nth(*pos).unwrap();
 
+    println!("el {}", el);
+
     if el == '[' {
         let mut list = vec![];
         *pos += 1;
         loop {
             let last_pos = *pos;
+            println!("pos before: {pos}");
             let item = create_list(s, pos);
-
+            println!("pos after: {pos}");
             // no changes
             if last_pos == *pos {
                 break;
@@ -77,6 +90,7 @@ fn create_list(s: &str, pos: &mut usize) -> List {
             list.push(Rc::new(RefCell::new(item)));
 
             let ch =  s.chars().nth(*pos).unwrap() ;
+            println!("ch {ch} pos: {pos}");
 
             if ch  == ']' {
                 *pos += 1;
@@ -115,30 +129,41 @@ fn main() ->  Result<()> {
     let file_name = env::args().nth(1).context("One file is necessary")?;
     let content = fs::read_to_string(file_name)?;
 
-    let res: Vec<&str> = content.split("\n\n").nth(1).into_iter().collect();
+    let res: Vec<&str> = content.split("\n\n").nth(68).into_iter().collect();
 
     println!("Res: {:?}", res);
 
     let mut index = 0;
     let mut sum = 0;
+    let mut arr: Vec<i32> = vec![];
     for item in res {
         index+=1;
         let (left, right) = item.split_once('\n').unwrap();
         println!("Index:{index}\nLeft:{left}\nRight:{right}\n");
         let mut pos = 0;
         let left = create_list(left, &mut pos);
+        println!("Left: {:?}", left);
+        todo!("TEST");
         let mut pos = 0;
         let right = create_list(right, &mut pos);
 
-        if compare_list(&Rc::new(RefCell::new(left)), &Rc::new(RefCell::new(right))) {
-            println!("TRUE");
-            sum += index;
-        } else {
-            println!("FALSE");
+        println!("Right: {:?}", right);
+
+        match compare_list(&Rc::new(RefCell::new(left)), &Rc::new(RefCell::new(right))) {
+            Ordering::Less => {
+                println!("TRUE");
+                arr.push(index);
+                sum += index;
+            }
+            Ordering::Greater|Ordering::Equal => {
+                println!("FALSE");
+            },
         }
+
     }
 
-    println!("SUM: {}", sum);
+    println!("arr: {:?}", arr);
+    println!("Index: {index} SUM: {}", sum);
 
     // let mut pos = 0;
 
