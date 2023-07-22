@@ -72,25 +72,24 @@ fn create_list(s: &str, pos: &mut usize) -> List {
 
     let el = s.chars().nth(*pos).unwrap();
 
-    println!("el {}", el);
+    // println!("el {}", el);
 
     if el == '[' {
         let mut list = vec![];
         *pos += 1;
         loop {
             let last_pos = *pos;
-            println!("pos before: {pos}");
+            // println!("pos before: {pos}");
             let item = create_list(s, pos);
-            println!("pos after: {pos}");
+            // println!("pos after: {pos}");
             // no changes
-            if last_pos == *pos {
-                break;
+            if last_pos != *pos {
+                list.push(Rc::new(RefCell::new(item)));
             }
 
-            list.push(Rc::new(RefCell::new(item)));
 
             let ch =  s.chars().nth(*pos).unwrap() ;
-            println!("ch {ch} pos: {pos}");
+            // println!("ch {ch} pos: {pos}");
 
             if ch  == ']' {
                 *pos += 1;
@@ -129,7 +128,7 @@ fn main() ->  Result<()> {
     let file_name = env::args().nth(1).context("One file is necessary")?;
     let content = fs::read_to_string(file_name)?;
 
-    let res: Vec<&str> = content.split("\n\n").nth(68).into_iter().collect();
+    let res: Vec<&str> = content.split("\n\n").collect();
 
     println!("Res: {:?}", res);
 
@@ -143,7 +142,6 @@ fn main() ->  Result<()> {
         let mut pos = 0;
         let left = create_list(left, &mut pos);
         println!("Left: {:?}", left);
-        todo!("TEST");
         let mut pos = 0;
         let right = create_list(right, &mut pos);
 
