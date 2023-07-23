@@ -13,10 +13,33 @@ enum List {
     El(i32)
 }
 
+impl List {
+    fn my_string(&self) -> String {
+        let str = match self {
+            List::MyList(v1) => {
+                let m :Vec<String> = v1.iter()
+                    .map(|e| {
+                        let el2 = e.borrow_mut();
+                        return el2.my_string();
+                    }).collect();
+
+                let m = m.join(",");
+
+                return format!("[{}]", m);
+            },
+            List::El(el) => format!("{}", el),
+        };
+
+        return str;
+    }
+
+}
+
 impl fmt::Display for List {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("LIST AB").unwrap();
-        return write!(f, "TEST");
+        let str = self.my_string();
+
+        return f.write_str(&str);
     }
 }
 
@@ -191,14 +214,22 @@ fn main() ->  Result<()> {
     });
 
     let mut index = 0;
+    let mut prod = 1;
     for el in sort {
         index += 1;
-        println!("index: {index} el {:?}", *el);
+        let list = (**el).borrow();
+
+        if list.my_string() == "[[2]]" || list.my_string() == "[[6]]" {
+            prod *= index;
+            println!("index: {index} el {}", list);
+        }
     }
 
 
     println!("arr: {:?}", arr);
     println!("Index: {index} SUM: {}", sum);
+
+    println!("PROD: {}", prod);
 
     // let mut pos = 0;
 
