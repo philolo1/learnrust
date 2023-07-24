@@ -17,11 +17,17 @@ fn main() ->  Result<()> {
 
     let mut my_map = HashMap::new();
 
+    let mut arr_max_y = -1;
     for line in res {
         let arr: Vec<Pair> = line.split(" -> ").flat_map(|x| x.split_once(',')).collect();
 
-        let arr: Vec<(i32, i32)> = arr.into_iter().map(|(a,b)| (a.parse().unwrap(), b.parse().unwrap())).collect();
-        dbg!(&arr);
+        let mut arr: Vec<(i32, i32)> = arr.into_iter().map(|(a,b)| (a.parse().unwrap(), b.parse().unwrap())).collect();
+        // dbg!(&arr);
+        //
+        let max_y = arr.iter().map(|(_x,y)| y).max().unwrap();
+
+        arr_max_y = max(arr_max_y, *max_y);
+
 
         for i in 0..(arr.len()-1) {
             let (x1, y1) = arr[i];
@@ -45,6 +51,13 @@ fn main() ->  Result<()> {
         }
 
     //    dbg!(&my_map.len());
+    }
+    dbg!(arr_max_y);
+
+    for x in 500-arr_max_y-10..500+arr_max_y+10 {
+        let pair = (x,arr_max_y + 2);
+        // dbg!(&pair);
+        my_map.insert(pair, true);
     }
 
     let mut counter = 0;
@@ -85,7 +98,10 @@ fn simulate_fall(my_map: &mut HashMap<(i32, i32), bool>) -> bool  {
         }
     }
 
-    if index <= 1000 {
+    if (x,y) == (500, 0) {
+        return false;
+    }
+    else if index <= 1000  {
         dbg!(&index);
         dbg!((&x,&y));
         my_map.insert((x,y), true);
