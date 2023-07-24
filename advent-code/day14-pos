@@ -1,0 +1,166 @@
+warning: unused import: `std::cell::RefCell`
+ --> src/bin/day14.rs:1:5
+  |
+1 | use std::cell::RefCell;
+  |     ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::rc::Rc`
+ --> src/bin/day14.rs:3:5
+  |
+3 | use std::rc::Rc;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `std::cmp::Ordering`
+ --> src/bin/day14.rs:7:5
+  |
+7 | use std::cmp::Ordering;
+  |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::fmt`
+ --> src/bin/day14.rs:8:5
+  |
+8 | use std::fmt;
+  |     ^^^^^^^^
+
+warning: `advent-code` (bin "day14") generated 4 warnings (run `cargo fix --bin "day14"` to apply 4 suggestions)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+     Running `target/debug/day14 day14-sim.txt`
+Day 11
+[src/bin/day14.rs:28] &arr = [
+    (
+        498,
+        4,
+    ),
+    (
+        498,
+        6,
+    ),
+    (
+        496,
+        6,
+    ),
+]
+[src/bin/day14.rs:51] &my_map = {
+    (
+        496,
+        6,
+    ): true,
+    (
+        498,
+        4,
+    ): true,
+    (
+        497,
+        6,
+    ): true,
+    (
+        498,
+        6,
+    ): true,
+    (
+        498,
+        5,
+    ): true,
+}
+[src/bin/day14.rs:28] &arr = [
+    (
+        503,
+        4,
+    ),
+    (
+        502,
+        4,
+    ),
+    (
+        502,
+        9,
+    ),
+    (
+        494,
+        9,
+    ),
+]
+[src/bin/day14.rs:51] &my_map = {
+    (
+        495,
+        9,
+    ): true,
+    (
+        497,
+        6,
+    ): true,
+    (
+        502,
+        7,
+    ): true,
+    (
+        502,
+        4,
+    ): true,
+    (
+        502,
+        8,
+    ): true,
+    (
+        498,
+        6,
+    ): true,
+    (
+        494,
+        9,
+    ): true,
+    (
+        501,
+        9,
+    ): true,
+    (
+        502,
+        6,
+    ): true,
+    (
+        502,
+        5,
+    ): true,
+    (
+        498,
+        4,
+    ): true,
+    (
+        500,
+        9,
+    ): true,
+    (
+        499,
+        9,
+    ): true,
+    (
+        498,
+        5,
+    ): true,
+    (
+        496,
+        6,
+    ): true,
+    (
+        497,
+        9,
+    ): true,
+    (
+        502,
+        9,
+    ): true,
+    (
+        496,
+        9,
+    ): true,
+    (
+        498,
+        9,
+    ): true,
+    (
+        503,
+        4,
+    ): true,
+}
