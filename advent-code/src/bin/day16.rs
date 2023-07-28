@@ -99,20 +99,94 @@ fn main() ->  Result<()> {
 
 
     println!("SEARCH");
-    let mut max_map = HashMap::new();
+    // let mut max_map = HashMap::new();
+
+    let mut max_arr = vec![vec![vec![-1; 1 << non_zero_rates.len()]; 31]; non_zero_rates.len()];
     let res = search(
         0,
-        30,
+        26,
         0,
         &dist_map,
         &non_zero_nodes,
-        &mut max_map,
+        &mut max_arr,
         &non_zero_rates
     );
 
+    let mut my_max  = res;
+
     dbg!(res);
 
+    println!("Start iteration");
 
+    let mut bit_number =  1 << (non_zero_rates.len());
+    bit_number -= 1;
+
+
+
+    for num in 0..(1 << non_zero_rates.len()) {
+        let first = num;
+        let second = (!num) & bit_number;
+
+        let mut sum1 = search(
+            0,
+            26,
+            first,
+            &dist_map,
+            &non_zero_nodes,
+            &mut max_arr,
+            &non_zero_rates
+        );
+
+        let mut current_rate = 0;
+        for i in 0..non_zero_rates.len() {
+            if (num >> i) & 1 == 1 {
+                current_rate += non_zero_rates[i];
+            }
+        }
+
+        sum1 -= current_rate * 26;
+
+
+        let mut sum2 = search(
+            0,
+            26,
+            second,
+            &dist_map,
+            &non_zero_nodes,
+            &mut max_arr,
+            &non_zero_rates
+        );
+
+        let mut current_rate = 0;
+        for i in 0..non_zero_rates.len() {
+            if (second >> i) & 1 == 1 {
+                current_rate += non_zero_rates[i];
+            }
+        }
+
+        sum2 -= current_rate * 26;
+
+
+        dbg!(sum1, sum2);
+
+        my_max = max(my_max, sum1 + sum2);
+    }
+
+    dbg!(my_max);
+
+    // dbg!(max_map.len());
+
+    // max 20
+    // max 30
+    // 2**20 + 2**21 * 30
+
+
+
+    // dbg!(max_arr.len());
+    // dbg!(max_arr[0].len());
+    // dbg!(max_arr[0][0].len());
+    // dbg!(max_arr[0][0][0]);
+    // dbg!(non_zero_rates.len());
     Ok(())
 }
 
@@ -122,14 +196,15 @@ fn search(
     opened_pos: u32,
     dist: &HashMap<&&str, HashMap<&str, i32>>,
     non_zero_nodes: &Vec<&str>,
-    max_map: &mut HashMap<(i32,i32,u32), i32>,
+    max_arr: &mut Vec<Vec<Vec<i32>>>,
     non_zero_rates: &Vec<i32>,
     ) -> i32 {
 
+    let dist_map = dist.get(&non_zero_nodes[current_pos as usize]).unwrap();
 
     // check if already in the hashmap
-    if let Some(val) = max_map.get(&(current_pos,minutes_left,opened_pos)) {
-        return *val;
+    if -1 != max_arr[current_pos as usize][minutes_left as usize][opened_pos as usize] {
+        return max_arr[current_pos as usize][minutes_left as usize][opened_pos as usize];
     }
 
 
@@ -147,7 +222,7 @@ fn search(
     }
 
 
-    println!("Current pos: {current_pos} min: {minutes_left} current_rate:{current_rate}");
+    // println!("Current pos: {current_pos} min: {minutes_left} current_rate:{current_rate}");
 
     // do nothing
     let mut res = minutes_left * current_rate;
@@ -155,8 +230,8 @@ fn search(
     // check if can open vault
     if (opened_pos >> current_pos) & 1 == 0 {
         let new_open_pos = opened_pos | (1 << current_pos);
-        println!("{new_open_pos} {} {}", current_pos, 1 << current_pos);
-        let open_case = current_rate + search(current_pos, minutes_left - 1, new_open_pos, dist, non_zero_nodes, max_map, non_zero_rates);
+        // println!("{new_open_pos} {} {}", current_pos, 1 << current_pos);
+        let open_case = current_rate + search(current_pos, minutes_left - 1, new_open_pos, dist, non_zero_nodes, max_arr, non_zero_rates);
         res = max(res, open_case);
     }
 
@@ -165,20 +240,22 @@ fn search(
         if i == current_pos as usize {
             continue
         }
-        let dist_map = dist.get(&non_zero_nodes[current_pos as usize]).unwrap();
         let go_dist = *dist_map.get(&non_zero_nodes[i]).unwrap();
 
-        if go_dist > minutes_left {
+        if go_dist > minutes_left ||
+            (opened_pos >> i) & 1 == 1
+        {
             continue
         }
 
-        let go_case = go_dist * current_rate + search(i as i32, minutes_left - go_dist, opened_pos, dist, non_zero_nodes, max_map, non_zero_rates);
+        let go_case = go_dist * current_rate + search(i as i32, minutes_left - go_dist, opened_pos, dist, non_zero_nodes, max_arr, non_zero_rates);
         res = max(res, go_case);
     }
 
 
 
-    max_map.insert((current_pos,minutes_left,opened_pos), res);
+
+    max_arr[current_pos as usize][minutes_left as usize][opened_pos as usize] = res;
 
     return res;
 
